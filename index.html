@@ -5,8 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>배달 로봇 엘리베이터 HRI 아이디에이션 카드</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    
+    <!-- CORS 에러 방지를 위해 crossorigin="anonymous" 속성 추가 및 공식 CDN 사용 -->
+    <link rel="stylesheet" as="style" crossorigin="anonymous" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    
+    <!-- 최신 브라우저 렌더링 엔진인 html-to-image 사용 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
+    
     <style>
         body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; }
         .card-grid {
@@ -24,45 +29,26 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
         
-        /* 인쇄 및 PDF 저장용 CSS */
+        body.modal-open { overflow: hidden; }
+
         @media print {
             @page { margin: 12mm; size: A4 portrait; }
             body { background-color: white; padding: 0; margin: 0; }
-            
-            /* 인쇄 시 종이 낭비를 막기 위해 제목, 설명, 부제목, 구분선, 플로팅 바 등을 모두 숨김 */
-            header, hr, h3, .print\:hidden, section > .flex { 
-                display: none !important; 
-            }
-            
-            /* 여백 및 컨테이너 제약 해제 */
+            header, hr, h3, .print\:hidden, section > .flex { display: none !important; }
             .max-w-6xl { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
-            
-            /* Tailwind의 space-y-12 여백 무효화 */
             .space-y-12 > * + * { margin-top: 0 !important; }
-            
-            /* 모든 카드를 하나의 연속된 바둑판으로 묶기 */
-            .space-y-12 {
-                display: grid !important;
-                grid-template-columns: repeat(4, 1fr) !important; /* A4 기준 4열 배치 */
-                gap: 12px !important;
-            }
-            
-            /* 그룹핑 요소의 레이아웃을 해제하여 내부 카드가 상위 그리드에 촘촘히 붙도록 함 */
-            section, .card-grid { 
-                display: contents !important; 
-            }
-            
+            .space-y-12 { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 12px !important; }
+            section, .card-grid { display: contents !important; }
             .card { break-inside: avoid; page-break-inside: avoid; border-width: 1px; box-shadow: none; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
         }
     </style>
 </head>
-<!-- 플로팅 바의 높이를 고려해 하단 여백 대폭 추가 -->
-<body class="text-slate-800 pb-[260px] md:pb-[340px]">
+<!-- 💡 플로팅 바가 얇아진 만큼 데스크톱의 하단 여백(pb)을 대폭 줄였습니다. -->
+<body class="text-slate-800 pb-[260px] md:pb-[220px]">
 
 <div class="max-w-6xl mx-auto px-4 py-8">
     
-    <!-- Header -->
     <header class="text-center mb-8">
         <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-3">🤖 배달 로봇 엘리베이터 아이디에이션</h1>
         <p class="text-slate-500">
@@ -71,7 +57,6 @@
         </p>
     </header>
 
-    <!-- 전체 카드 PDF 다운로드 버튼 (일반 위치) -->
     <div class="flex justify-center mb-12 print:hidden">
         <button onclick="window.print()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform hover:-translate-y-1 active:scale-95 flex items-center gap-2 text-sm md:text-base">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
@@ -82,11 +67,9 @@
         </button>
     </div>
 
-    <!-- Card Decks -->
     <div class="space-y-12">
         
-        <!-- 1. 상황 (Context) -->
-        <section>
+        <section id="section-context" class="scroll-mt-8">
             <div class="flex items-center gap-3 mb-6">
                 <span class="text-2xl">🕒</span>
                 <h2 class="text-2xl font-bold text-slate-800">1. 상황 (Context)</h2>
@@ -96,133 +79,149 @@
             <h3 class="text-lg font-semibold text-slate-700 mb-3 flex items-center gap-2">
                 <span class="w-3 h-3 rounded-full bg-amber-400"></span> 시간적 흐름
             </h3>
-            <div class="card-grid mb-6" id="deck-context-journey"></div>
+            <div class="card-grid mb-6" id="deck-contextJourney"></div>
 
             <h3 class="text-lg font-semibold text-slate-700 mb-3 flex items-center gap-2 mt-4">
                 <span class="w-3 h-3 rounded-full bg-orange-400"></span> 공간 및 소통 제약
             </h3>
-            <div class="card-grid mb-6" id="deck-context-constraints"></div>
+            <div class="card-grid mb-6" id="deck-contextConstraints"></div>
 
             <h3 class="text-lg font-semibold text-slate-700 mb-3 flex items-center gap-2 mt-4">
                 <span class="w-3 h-3 rounded-full bg-red-400"></span> 돌발 변수
             </h3>
-            <div class="card-grid" id="deck-context-unexpected"></div>
+            <div class="card-grid" id="deck-contextUnexpected"></div>
         </section>
 
         <hr class="border-slate-200">
 
-        <!-- 2. 어떻게 (How) -->
-        <section>
+        <section id="section-how" class="scroll-mt-8">
             <div class="flex items-center gap-3 mb-6">
                 <span class="text-2xl">🎭</span>
                 <h2 class="text-2xl font-bold text-slate-800">2. 어떻게 (How)</h2>
                 <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm font-semibold ml-2">어떤 수단과 태도로?</span>
             </div>
             
-            <h3 class="text-lg font-semibold text-slate-700 mb-3 flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full bg-sky-400"></span> 표현 수단
+            <h3 id="section-how-modality" class="text-lg font-semibold text-slate-700 mb-3 flex items-center gap-2 scroll-mt-8">
+                <span class="w-3 h-3 rounded-full bg-sky-400"></span> 표현 수단 (로봇)
             </h3>
             <div class="card-grid mb-8" id="deck-how-modality"></div>
 
-            <h3 class="text-lg font-semibold text-slate-700 mb-3 flex items-center gap-2">
-                <span class="w-3 h-3 rounded-full bg-rose-400"></span> 태도와 감정
+            <h3 id="section-how-persona" class="text-lg font-semibold text-slate-700 mb-3 flex items-center gap-2 scroll-mt-8">
+                <span class="w-3 h-3 rounded-full bg-rose-400"></span> 태도와 감정 (로봇)
             </h3>
             <div class="card-grid" id="deck-how-persona"></div>
         </section>
 
         <hr class="border-slate-200">
 
-        <!-- 3. 무엇을 - 로봇 (What Robot) -->
-        <section>
+        <section id="section-robot" class="scroll-mt-8">
             <div class="flex items-center gap-3 mb-6">
                 <span class="text-2xl">🤖</span>
                 <h2 class="text-2xl font-bold text-slate-800">3. 무엇을 (로봇의 행동)</h2>
                 <span class="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-sm font-semibold ml-2">구체적으로 어떤 행동을?</span>
             </div>
-            <div class="card-grid" id="deck-what-robot"></div>
+            <div class="card-grid" id="deck-whatRobot"></div>
         </section>
 
         <hr class="border-slate-200">
 
-        <!-- 4. 무엇을 - 사람 (What Human) -->
-        <section>
+        <section id="section-human" class="scroll-mt-8">
             <div class="flex items-center gap-3 mb-6">
                 <span class="text-2xl">🧑‍🤝‍🧑</span>
                 <h2 class="text-2xl font-bold text-slate-800">4. 무엇을 (사람의 행동)</h2>
                 <span class="px-3 py-1 bg-violet-100 text-violet-800 rounded-full text-sm font-semibold ml-2">사람은 어떻게 반응할까?</span>
             </div>
-            <div class="card-grid" id="deck-what-human"></div>
+            <div class="card-grid" id="deck-whatHuman"></div>
         </section>
 
     </div>
 </div>
 
-<!-- 하단 플로팅 바 (선택된 시나리오) -->
-<div class="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.15)] z-50 print:hidden">
-    <!-- 플로팅 바 내부의 최대 너비를 제한하여 데스크탑에서 카드가 거대해지는 것을 방지 -->
-    <div class="max-w-4xl mx-auto px-2 md:px-4 py-3 md:py-4 flex flex-col gap-2 md:gap-3">
+<!-- 💡 반응형 플로팅 아일랜드 -->
+<div class="fixed bottom-0 md:bottom-6 left-0 w-full px-0 md:px-6 z-50 print:hidden flex justify-center pointer-events-none">
+    <!-- p-3으로 상하 여백을 줄여 전체적인 박스 크기를 날씬하게 조정 -->
+    <div class="w-full max-w-5xl bg-white/95 backdrop-blur-md border-t md:border border-slate-200 shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.15)] md:shadow-2xl md:rounded-3xl transition-all pointer-events-auto p-2 md:p-3 flex flex-col md:flex-row gap-2 md:gap-3 items-stretch">
         
-        <!-- 캡처될 선택 슬롯 영역 -->
-        <!-- 5개의 슬롯을 배치하기 위해 영역 너비 조정 -->
-        <div class="w-full bg-slate-50 p-2 md:p-3 rounded-xl border border-slate-200 shadow-inner" id="scenario-canvas">
-            <!-- 5개의 슬롯을 위한 grid-cols-5 설정 -->
-            <div class="grid grid-cols-5 gap-1 md:gap-2 h-full">
-                
-                <div id="slot-context" class="aspect-square rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 font-medium bg-white transition-all">
-                    <span class="text-xl md:text-3xl mb-1">❓</span>
-                    <span class="text-[8px] md:text-sm whitespace-nowrap">상황</span>
-                </div>
-                <!-- 표현 수단 슬롯 -->
-                <div id="slot-how-modality" class="aspect-square rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 font-medium bg-white transition-all">
-                    <span class="text-xl md:text-3xl mb-1">❓</span>
-                    <span class="text-[8px] md:text-sm whitespace-nowrap">표현 수단</span>
-                </div>
-                <!-- 태도/감정 슬롯 -->
-                <div id="slot-how-persona" class="aspect-square rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 font-medium bg-white transition-all">
-                    <span class="text-xl md:text-3xl mb-1">❓</span>
-                    <span class="text-[8px] md:text-sm whitespace-nowrap">태도/감정</span>
-                </div>
-                <div id="slot-robot" class="aspect-square rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 font-medium bg-white transition-all">
-                    <span class="text-xl md:text-3xl mb-1">❓</span>
-                    <span class="text-[8px] md:text-[13px] whitespace-nowrap">무엇을 (로봇)</span>
-                </div>
-                <div id="slot-human" class="aspect-square rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 font-medium bg-white transition-all">
-                    <span class="text-xl md:text-3xl mb-1">❓</span>
-                    <span class="text-[8px] md:text-[13px] whitespace-nowrap">무엇을 (사람)</span>
-                </div>
-
+        <!-- 캡처 영역 (시나리오 캔버스) -->
+        <div class="flex-grow bg-slate-50 p-2 md:p-3 rounded-xl md:rounded-2xl border border-slate-200 shadow-inner flex flex-col" id="scenario-canvas">
+            <div class="grid grid-cols-5 gap-1 md:gap-2 w-full">
+                <div id="slot-context" class="relative w-full aspect-square rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 font-medium bg-white transition-all"></div>
+                <div id="slot-how-modality" class="relative w-full aspect-square rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 font-medium bg-white transition-all"></div>
+                <div id="slot-how-persona" class="relative w-full aspect-square rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 font-medium bg-white transition-all"></div>
+                <div id="slot-robot" class="relative w-full aspect-square rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 font-medium bg-white transition-all"></div>
+                <div id="slot-human" class="relative w-full aspect-square rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 font-medium bg-white transition-all"></div>
             </div>
-            
-            <!-- 메모 입력 영역 -->
             <textarea id="scenario-memo" class="w-full mt-2 md:mt-3 p-2 text-xs md:text-sm border border-slate-200 rounded-lg bg-white resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder-slate-400 overflow-hidden" rows="1" placeholder="선택한 시나리오의 구체적인 상황이나 아이디어를 자유롭게 메모하세요..." oninput="handleMemoChange(event)"></textarea>
         </div>
 
-        <!-- 컨트롤 버튼 영역 (1줄 배치) -->
-        <div class="flex flex-row gap-1 md:gap-2 w-full justify-between h-10 md:h-12">
-            <button onclick="drawRandomCards()" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg shadow-sm transition-colors active:scale-95 flex items-center justify-center gap-1 text-[11px] md:text-sm px-1">
-                <span class="text-sm md:text-lg">🎲</span> 랜덤
+        <!-- 💡 컨트롤 버튼 영역 (모바일 가로, 데스크톱 우측 세로 동기화) -->
+        <!-- 너비(w)를 축소하고, flex-1 및 min-h-0 속성으로 좌측 캔버스의 높이와 정확히 1:1로 맞춤 -->
+        <div class="flex flex-row md:flex-col gap-1.5 md:gap-2 w-full md:w-[72px] lg:w-[84px] flex-shrink-0 justify-between h-11 md:h-auto">
+            <button onclick="drawRandomCards()" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-lg shadow-sm transition-colors active:scale-95 flex flex-row md:flex-col items-center justify-center gap-1 md:gap-1 px-1 py-0 min-h-0">
+                <span class="text-sm md:text-[22px] leading-none">🎲</span>
+                <span class="hidden sm:inline md:block text-[11px] md:text-[10px] font-medium tracking-tight">전체 랜덤</span>
             </button>
-            <button onclick="clearAllSlots()" class="flex-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-lg shadow-sm transition-colors active:scale-95 flex items-center justify-center gap-1 text-[11px] md:text-sm border border-rose-100 px-1" title="전부 비우기">
-                <span class="text-sm md:text-lg">🗑️</span> 비우기
+            <button onclick="clearAllSlots()" class="flex-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-lg shadow-sm transition-colors active:scale-95 flex flex-row md:flex-col items-center justify-center gap-1 md:gap-1 px-1 py-0 border border-rose-100 min-h-0" title="전부 비우기">
+                <span class="text-sm md:text-[22px] leading-none">🗑️</span>
+                <span class="hidden sm:inline md:block text-[11px] md:text-[10px] font-medium tracking-tight">비우기</span>
             </button>
-            <button id="undo-btn" onclick="undoAction()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg shadow-sm transition-colors active:scale-95 flex items-center justify-center gap-1 text-[11px] md:text-sm opacity-50 cursor-not-allowed border border-slate-200 px-1" disabled title="단축키: Ctrl+Z">
-                <span class="text-sm md:text-lg">↩️</span> 취소
+            <button id="undo-btn" onclick="undoAction()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg shadow-sm transition-colors active:scale-95 flex flex-row md:flex-col items-center justify-center gap-1 md:gap-1 px-1 py-0 opacity-50 cursor-not-allowed border border-slate-200 min-h-0" disabled title="단축키: Ctrl+Z">
+                <span class="text-sm md:text-[22px] leading-none">↩️</span>
+                <span class="hidden sm:inline md:block text-[11px] md:text-[10px] font-medium tracking-tight">취소</span>
             </button>
-            <button onclick="downloadScenarioImage()" class="flex-[1.5] md:flex-[1.5] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg flex items-center justify-center gap-1 transition-colors text-[11px] md:text-sm border border-indigo-100 shadow-sm px-1">
-                <span class="text-sm md:text-lg">💾</span> <span class="hidden sm:inline">이미지 </span>저장
+            <button onclick="downloadScenarioImage()" class="flex-[1.5] md:flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg flex flex-row md:flex-col items-center justify-center gap-1 md:gap-1 transition-colors px-1 py-0 border border-indigo-200 shadow-sm min-h-0">
+                <span class="text-sm md:text-[22px] leading-none">💾</span>
+                <span class="hidden sm:inline md:block text-[11px] md:text-[10px] font-medium tracking-tight leading-tight">이미지 저장</span>
             </button>
         </div>
 
     </div>
 </div>
 
-<script>
-    // --- 슬롯 ID 배열 (5개로 확장) ---
-    const SLOTS = ['slot-context', 'slot-how-modality', 'slot-how-persona', 'slot-robot', 'slot-human'];
+<!-- 사용자 지정 카드 추가 모달 (Modal) -->
+<div id="add-card-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] hidden flex-col items-center justify-center p-4 opacity-0 transition-opacity duration-300 print:hidden">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-300" id="modal-content">
+        <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+            <h3 class="font-bold text-slate-800 flex items-center gap-2"><span class="text-xl">✨</span> 새 카드 만들기</h3>
+            <button onclick="closeAddCardModal()" class="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-full flex items-center justify-center hover:bg-slate-200 transition-colors">✕</button>
+        </div>
+        
+        <div class="p-5 space-y-4">
+            <input type="hidden" id="modal-category-key">
+            <input type="hidden" id="modal-style-class">
+            <input type="hidden" id="modal-category-label">
+            <input type="hidden" id="modal-slot-id">
+            
+            <div class="flex gap-4">
+                <div class="w-1/3">
+                    <label class="block text-xs font-bold text-slate-500 mb-1.5">아이콘</label>
+                    <input type="text" id="modal-input-icon" value="💡" maxlength="2" class="w-full border border-slate-200 rounded-lg p-3 text-3xl text-center focus:ring-2 focus:ring-indigo-400 outline-none bg-slate-50 focus:bg-white transition-colors" title="이모지를 하나 입력하세요">
+                </div>
+                <div class="w-2/3">
+                    <label class="block text-xs font-bold text-slate-500 mb-1.5">내용</label>
+                    <input type="text" id="modal-input-text" placeholder="예: 비상벨 누르기" maxlength="30" class="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-400 outline-none bg-slate-50 focus:bg-white transition-colors h-[64px]">
+                </div>
+            </div>
+            
+            <div id="modal-tag-container" class="hidden">
+                <label class="block text-xs font-bold text-slate-500 mb-1.5">분류 태그 (선택 사항)</label>
+                <input type="text" id="modal-input-tag" placeholder="예: 시각, 청각, 온도..." maxlength="6" class="w-full border border-slate-200 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-400 outline-none bg-slate-50 focus:bg-white transition-colors">
+            </div>
+        </div>
+        
+        <div class="p-4 border-t border-slate-100 flex gap-2 bg-slate-50">
+            <button onclick="closeAddCardModal()" class="flex-1 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-lg hover:bg-slate-100 transition-colors">취소</button>
+            <button onclick="submitNewCard()" class="flex-1 py-2.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">추가하기</button>
+        </div>
+    </div>
+</div>
 
-    // --- 상태 관리 (History & LocalStorage) ---
+<!-- 기능 로직 (순수 JavaScript 및 LocalStorage) -->
+<script>
+    const SLOTS = ['slot-context', 'slot-how-modality', 'slot-how-persona', 'slot-robot', 'slot-human'];
     const MAX_HISTORY = 10;
-    const STORAGE_KEY = 'ideationCardsState';
+    const STATE_STORAGE_KEY = 'ideationCardsState';
+    const CUSTOM_DATA_KEY = 'ideationCustomCards';
     
     let currentState = {
         'slot-context': null,
@@ -234,38 +233,306 @@
     };
     let historyStack = [];
 
-    function saveToHistory() {
-        historyStack.push(JSON.parse(JSON.stringify(currentState)));
-        if (historyStack.length > MAX_HISTORY) {
-            historyStack.shift();
-        }
-        updateUndoButton();
+    const baseCardData = {
+        contextJourney: [
+            { icon: "⏳", text: "탑승을 대기할 때" },
+            { icon: "🚪", text: "만원 엘리베이터 문이 열릴 때" },
+            { icon: "🏃", text: "문 닫히기 직전 아슬아슬할 때" },
+            { icon: "↕️", text: "층마다 타고 내리는 중일 때" },
+            { icon: "🏁", text: "목적지에 도착해 하차할 때" }
+        ],
+        contextConstraints: [
+            { icon: "👨‍👩‍👧‍👦", text: "사람들에게 겹겹이 포위될 때" },
+            { icon: "🛒", text: "유모차/큰 짐으로 비좁을 때" },
+            { icon: "📱", text: "모두가 스마트폰만 볼 때" },
+            { icon: "😶", text: "숨 막히는 어색한 침묵 속" },
+            { icon: "🪞", text: "거울로 사람과 눈 마주칠 때" }
+        ],
+        contextUnexpected: [
+            { icon: "⚠️", text: "사각지대라 문에 끼일 뻔할 때" },
+            { icon: "🦶", text: "실수로 로봇을 발로 찼을 때" },
+            { icon: "🐕", text: "아이/동물이 호기심에 다가올 때" },
+            { icon: "🍲", text: "맛있는 음식 냄새가 퍼질 때" },
+            { icon: "🤖", text: "다른 배달 로봇과 마주쳤을 때" },
+            { icon: "⚡", text: "갑자기 멈추거나 정전이 될 때" }
+        ],
+        howModality: [
+            { icon: "📺", text: "디스플레이 화면으로", tag: "시각" },
+            { icon: "💡", text: "조명(빛, 색상)으로", tag: "시각" },
+            { icon: "🗣️", text: "목소리로 (안내방송)", tag: "청각" },
+            { icon: "🎵", text: "효과음/배경음악으로", tag: "청각" },
+            { icon: "🔇", text: "완전한 침묵(음소거)으로", tag: "청각" },
+            { icon: "☁️", text: "부드러운 촉감으로", tag: "물리/촉각" },
+            { icon: "📳", text: "미세한 진동으로", tag: "물리/촉각" },
+            { icon: "🍃", text: "바람이나 향기로", tag: "물리/촉각" },
+            { icon: "💨", text: "날렵하고 빠르게", tag: "움직임" },
+            { icon: "🐢", text: "느리고 조심스럽게", tag: "움직임" },
+            { icon: "🎈", text: "부피를 늘리거나 줄이며", tag: "움직임" },
+            { icon: "💥", text: "갑자기 툭 튀어나오듯", tag: "타이밍" },
+            { icon: "🌫️", text: "서서히 스며들듯이", tag: "타이밍" },
+            { icon: "🍬", text: "작은 간식이나 달콤한 맛으로", tag: "미각" }
+        ],
+        howPersona: [
+            { icon: "💦", text: "간절하고 애처롭게(진땀)" },
+            { icon: "🤵", text: "정중하고 깍듯하게(호텔리어)" },
+            { icon: "🛑", text: "단호하고 명확하게(교통경찰)" },
+            { icon: "🥰", text: "친근하고 넉살 좋게(애교)" },
+            { icon: "🕵️", text: "은밀하고 조용하게(비밀요원)" },
+            { icon: "😮‍💨", text: "찌들고 피곤하게(직장인)" },
+            { icon: "📏", text: "과하게 원칙 따지기(완벽주의)" }
+        ],
+        whatRobot: [
+            { icon: "↔️", text: "사람과 간격 벌리기(밀어내기)" },
+            { icon: "↘️", text: "구석으로 밀착하기" },
+            { icon: "🚦", text: "비켜달라고 지휘하기(교통정리)" },
+            { icon: "🤝", text: "자리 양보 협상하기" },
+            { icon: "🙏", text: "못할 때 도와달라고 조르기" },
+            { icon: "🎁", text: "감사나 보상(쿠폰 등) 제공하기" },
+            { icon: "🤹", text: "어색함 깨는 개인기 보여주기" },
+            { icon: "🫂", text: "지친 사람 위로하기" },
+            { icon: "🙈", text: "존재감 지우기(자는 척 등)" },
+            { icon: "🛡️", text: "음식(온도/냄새) 사수하기" },
+            { icon: "🎛️", text: "문/층수 조작하기(환경 통제)" },
+            { icon: "👯", text: "사람 행동 따라 하기(모방)" }
+        ],
+        whatHuman: [
+            { icon: "✋", text: "쓰다듬어주기" },
+            { icon: "🛣️", text: "길 터주기" },
+            { icon: "📢", text: "내릴 수 있게 대신 외쳐주기" },
+            { icon: "👆", text: "버튼 대신 눌러주기" },
+            { icon: "🙄", text: "완전 무시하기" },
+            { icon: "😠", text: "좁다고 불평/짜증 내기" },
+            { icon: "🚧", text: "로봇 앞을 고의로 막기" },
+            { icon: "📸", text: "신기해하며 사진 촬영하기" },
+            { icon: "😈", text: "장난치거나 음식 탈취 시도하기" },
+            { icon: "☕", text: "로봇 위에 짐/커피 올려두기" }
+        ]
+    };
+
+    const styles = {
+        contextJourney: "bg-amber-50 border-amber-300 text-amber-900 shadow-amber-100/50 hover:bg-amber-100",
+        contextConstraints: "bg-orange-50 border-orange-300 text-orange-900 shadow-orange-100/50 hover:bg-orange-100",
+        contextUnexpected: "bg-red-50 border-red-300 text-red-900 shadow-red-100/50 hover:bg-red-100",
+        howModality: "bg-sky-50 border-sky-300 text-sky-900 shadow-sky-100/50 hover:bg-sky-100",
+        howPersona: "bg-rose-50 border-rose-300 text-rose-900 shadow-rose-100/50 hover:bg-rose-100",
+        whatRobot: "bg-emerald-50 border-emerald-300 text-emerald-900 shadow-emerald-100/50 hover:bg-emerald-100",
+        whatHuman: "bg-violet-50 border-violet-300 text-violet-900 shadow-violet-100/50 hover:bg-violet-100"
+    };
+
+    let customCardData = {
+        contextJourney: [], contextConstraints: [], contextUnexpected: [],
+        howModality: [], howPersona: [], whatRobot: [], whatHuman: []
+    };
+
+    function getCombinedCardData(key) {
+        return [...baseCardData[key], ...(customCardData[key] || [])];
     }
 
     function persistState() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(currentState));
+        localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(currentState));
+    }
+
+    function persistCustomCards() {
+        localStorage.setItem(CUSTOM_DATA_KEY, JSON.stringify(customCardData));
     }
 
     function loadPersistedState() {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
+        const savedCards = localStorage.getItem(CUSTOM_DATA_KEY);
+        if (savedCards) {
+            try { customCardData = { ...customCardData, ...JSON.parse(savedCards) }; } 
+            catch (e) { console.error("커스텀 카드 로드 실패", e); }
+        }
+        
+        renderDecks();
+
+        const savedState = localStorage.getItem(STATE_STORAGE_KEY);
+        if (savedState) {
             try {
-                // 이전 4구조의 데이터가 있을 수 있으므로 방어적 병합
-                const parsed = JSON.parse(saved);
+                const parsed = JSON.parse(savedState);
                 currentState = { ...currentState, ...parsed };
                 if (currentState.memo === undefined) currentState.memo = '';
                 
-                SLOTS.forEach(slotId => {
-                    updateSlotDOM(slotId, currentState[slotId], true);
-                });
+                SLOTS.forEach(slotId => updateSlotDOM(slotId, currentState[slotId], true));
                 
                 const memoEl = document.getElementById('scenario-memo');
-                memoEl.value = currentState.memo;
-                autoResizeMemo(memoEl);
-            } catch (e) {
-                console.error("저장된 상태를 불러오지 못했습니다.", e);
-            }
+                if (memoEl) {
+                    memoEl.value = currentState.memo;
+                    autoResizeMemo(memoEl);
+                }
+            } catch (e) { console.error("상태 로드 실패", e); }
+        } else {
+            SLOTS.forEach(slotId => updateSlotDOM(slotId, null, true));
         }
+    }
+
+    function createCardHTML(item, styleClass, categoryLabel, slotId, isCustom = false, categoryKey = '', customIndex = -1) {
+        const itemStr = JSON.stringify(item).replace(/"/g, '&quot;');
+        
+        const tagHTML = item.tag 
+            ? `<span class="absolute right-1.5 top-7 text-[9px] font-bold px-1.5 py-0.5 rounded bg-white/80 shadow-sm border border-black/5 text-inherit z-10 whitespace-nowrap">${item.tag}</span>` 
+            : '';
+            
+        const deleteBtnHTML = isCustom 
+            ? `<button onclick="event.stopPropagation(); deleteCustomCard('${categoryKey}', ${customIndex})" class="absolute top-1 left-1.5 text-[10px] text-rose-500 bg-white/90 rounded-full w-4 h-4 flex items-center justify-center hover:bg-rose-500 hover:text-white transition-all z-20 shadow-sm border border-rose-200 flex-shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 duration-200" title="카드 삭제" data-ignore="true">✕</button>`
+            : '';
+
+        return `
+            <div onclick="handleCardClick('${slotId}', ${itemStr}, '${styleClass}', '${categoryLabel}')" class="relative card rounded-2xl border-2 pt-8 pb-2 px-2 flex flex-col items-center justify-start text-center cursor-pointer overflow-hidden ${styleClass} hover:ring-2 hover:ring-indigo-400 hover:ring-offset-2 group">
+                
+                <div class="absolute top-0 left-0 w-full bg-black/5 border-b border-black/5 flex justify-center items-center z-10 py-1">
+                    ${deleteBtnHTML}
+                    <span class="text-[10px] font-bold opacity-80 tracking-tight truncate px-6 leading-none mt-0.5">${categoryLabel}</span>
+                </div>
+                
+                ${tagHTML}
+                
+                <div class="text-3xl md:text-4xl mb-1 mt-0 flex-shrink-0 group-hover:scale-110 transition-transform relative z-0">${item.icon}</div>
+                <span class="font-bold text-[13px] md:text-sm leading-tight break-keep w-full line-clamp-3 relative z-0" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${item.text}</span>
+            </div>
+        `;
+    }
+
+    function renderDecks() {
+        const renderCategory = (key, containerId, styleClass, label, slotId) => {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+            
+            getCombinedCardData(key).forEach((item, index) => {
+                const isCustom = index >= baseCardData[key].length;
+                const customIndex = index - baseCardData[key].length;
+                container.innerHTML += createCardHTML(item, styleClass, label, slotId, isCustom, key, customIndex);
+            });
+            
+            container.innerHTML += `
+                <div onclick="openAddCardModal('${key}', '${styleClass}', '${label}', '${slotId}')" class="relative card rounded-2xl border-2 border-dashed border-slate-300 pt-7 pb-3 px-3 flex flex-col items-center justify-center text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition-colors bg-white print:hidden group" data-ignore="true">
+                    <div class="text-4xl mb-2 text-slate-300 group-hover:text-indigo-400 group-hover:scale-110 transition-all">+</div>
+                    <span class="font-bold text-sm text-slate-400 group-hover:text-indigo-500">직접 추가</span>
+                </div>
+            `;
+        }
+
+        renderCategory('contextJourney', 'deck-contextJourney', styles.contextJourney, "[상황] 시간적 흐름", "slot-context");
+        renderCategory('contextConstraints', 'deck-contextConstraints', styles.contextConstraints, "[상황] 공간/소통 제약", "slot-context");
+        renderCategory('contextUnexpected', 'deck-contextUnexpected', styles.contextUnexpected, "[상황] 돌발 변수", "slot-context");
+        
+        renderCategory('howModality', 'deck-how-modality', styles.howModality, "[어떻게] 표현 수단 (로봇)", "slot-how-modality");
+        renderCategory('howPersona', 'deck-how-persona', styles.howPersona, "[어떻게] 태도/감정 (로봇)", "slot-how-persona");
+        
+        renderCategory('whatRobot', 'deck-whatRobot', styles.whatRobot, "[무엇을] 로봇 행동", "slot-robot");
+        renderCategory('whatHuman', 'deck-whatHuman', styles.whatHuman, "[무엇을] 사람 행동", "slot-human");
+    }
+
+    window.scrollToSection = function(sectionId) {
+        document.getElementById(sectionId).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    window.clearSlot = function(slotId) {
+        saveToHistory();
+        currentState[slotId] = null;
+        persistState();
+        updateSlotDOM(slotId, null, false);
+    }
+
+    window.randomizeSlot = function(slotId) {
+        saveToHistory();
+        const getRandomItem = arr => arr[Math.floor(Math.random() * arr.length)];
+        
+        if (slotId === 'slot-context') {
+            const allContexts = [
+                ...getCombinedCardData('contextJourney').map(item => ({ item, styleClass: styles.contextJourney, categoryLabel: "[상황] 시간적 흐름" })),
+                ...getCombinedCardData('contextConstraints').map(item => ({ item, styleClass: styles.contextConstraints, categoryLabel: "[상황] 공간/소통 제약" })),
+                ...getCombinedCardData('contextUnexpected').map(item => ({ item, styleClass: styles.contextUnexpected, categoryLabel: "[상황] 돌발 변수" }))
+            ];
+            currentState[slotId] = getRandomItem(allContexts);
+        } else if (slotId === 'slot-how-modality') {
+            currentState[slotId] = { item: getRandomItem(getCombinedCardData('howModality')), styleClass: styles.howModality, categoryLabel: "[어떻게] 표현 수단 (로봇)" };
+        } else if (slotId === 'slot-how-persona') {
+            currentState[slotId] = { item: getRandomItem(getCombinedCardData('howPersona')), styleClass: styles.howPersona, categoryLabel: "[어떻게] 태도/감정 (로봇)" };
+        } else if (slotId === 'slot-robot') {
+            currentState[slotId] = { item: getRandomItem(getCombinedCardData('whatRobot')), styleClass: styles.whatRobot, categoryLabel: "[무엇을] 로봇 행동" };
+        } else if (slotId === 'slot-human') {
+            currentState[slotId] = { item: getRandomItem(getCombinedCardData('whatHuman')), styleClass: styles.whatHuman, categoryLabel: "[무엇을] 사람 행동" };
+        }
+        
+        persistState();
+        updateSlotDOM(slotId, currentState[slotId], false);
+    }
+
+    function handleCardClick(slotId, item, styleClass, categoryLabel) {
+        saveToHistory();
+        currentState[slotId] = { item, styleClass, categoryLabel };
+        persistState();
+        updateSlotDOM(slotId, currentState[slotId], false);
+    }
+
+    function updateSlotDOM(slotId, data, skipAnimation = false) {
+        const slot = document.getElementById(slotId);
+        const sectionMap = {
+            'slot-context': 'section-context',
+            'slot-how-modality': 'section-how-modality',
+            'slot-how-persona': 'section-how-persona',
+            'slot-robot': 'section-robot',
+            'slot-human': 'section-human'
+        };
+        const targetSection = sectionMap[slotId];
+
+        if (!data) {
+            let placeholderText = "";
+            if(slotId === 'slot-context') placeholderText = "상황";
+            if(slotId === 'slot-how-modality') placeholderText = "표현 수단 (로봇)";
+            if(slotId === 'slot-how-persona') placeholderText = "태도/감정 (로봇)";
+            if(slotId === 'slot-robot') placeholderText = "무엇을 (로봇)";
+            if(slotId === 'slot-human') placeholderText = "무엇을 (사람)";
+            
+            slot.className = `relative w-full aspect-square rounded-xl border-2 border-dashed border-slate-300 bg-white transition-all hover:border-indigo-400 hover:bg-indigo-50 cursor-pointer group`;
+            slot.innerHTML = `
+                <div class="absolute top-1 right-1 md:top-1.5 md:right-1.5 z-10 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200" data-ignore="true">
+                    <button onclick="event.stopPropagation(); randomizeSlot('${slotId}')" class="w-5 h-5 md:w-6 md:h-6 flex items-center justify-center bg-slate-100 hover:bg-indigo-100 text-slate-500 hover:text-indigo-600 rounded shadow-sm border border-slate-200 transition-colors text-[10px] md:text-xs" title="이 칸만 랜덤 뽑기">🎲</button>
+                </div>
+                <div onclick="scrollToSection('${targetSection}')" class="w-full h-full flex flex-col items-center justify-center text-slate-400 group-hover:text-indigo-400 transition-colors pt-2">
+                    <span class="text-2xl md:text-4xl mb-1">❓</span>
+                    <span class="text-[9px] md:text-sm font-bold whitespace-nowrap">${placeholderText}</span>
+                    <span class="text-[7px] md:text-xs mt-1 text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity hidden md:block print:hidden">클릭해서 고르기</span>
+                </div>
+            `;
+            return;
+        }
+
+        const { item, styleClass, categoryLabel } = data;
+        const animationClasses = skipAnimation ? '' : 'scale-[1.02] shadow-md';
+
+        const tagHTML = item.tag 
+            ? `<span class="absolute right-1 top-5 md:right-1.5 md:top-7 text-[6px] md:text-[9px] font-bold px-1 md:px-1.5 py-0.5 rounded bg-white/80 shadow-sm border border-black/5 text-inherit z-10 whitespace-nowrap">${item.tag}</span>` 
+            : '';
+
+        slot.className = `relative w-full aspect-square rounded-xl border-2 pt-5 md:pt-6 pb-1 md:pb-2 px-1 md:px-3 flex flex-col items-center justify-center text-center overflow-hidden transition-all duration-300 ${styleClass} ${animationClasses} group`;
+        
+        slot.innerHTML = `
+             <div class="absolute top-0 left-0 w-full h-4 md:h-6 bg-black/5 border-b border-black/5 flex justify-center items-center z-10 py-0.5 md:py-1">
+                <span class="text-[6px] md:text-[10px] font-bold opacity-80 tracking-tight truncate px-4 md:px-6 w-full text-center leading-none mt-0.5">${categoryLabel}</span>
+                
+                <div class="absolute right-0.5 top-[1px] md:right-1.5 md:top-1 flex items-center gap-1 md:gap-1.5 bg-white/90 backdrop-blur-sm rounded px-0.5 md:px-1 py-0.5 shadow-sm border border-black/5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200 print:hidden" data-ignore="true">
+                    <button onclick="event.stopPropagation(); randomizeSlot('${slotId}')" class="text-[8px] md:text-[10px] text-slate-600 hover:scale-125 hover:text-indigo-600 transition-all leading-none" title="이 칸만 랜덤 변경">🎲</button>
+                    <button onclick="event.stopPropagation(); clearSlot('${slotId}')" class="text-[8px] md:text-[10px] text-rose-500 hover:scale-125 transition-all leading-none" title="이 카드 지우기">✕</button>
+                </div>
+            </div>
+            
+            ${tagHTML}
+            
+            <div class="text-2xl md:text-4xl mb-0.5 md:mb-1.5 mt-1 flex-shrink-0 leading-none relative z-0">${item.icon}</div>
+            <span class="font-bold text-[8px] md:text-sm lg:text-base leading-tight md:leading-snug break-keep w-full text-center relative z-0" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${item.text}</span>
+        `;
+        
+        if (!skipAnimation) {
+            setTimeout(() => slot.classList.remove('scale-[1.02]', 'shadow-md'), 300);
+        }
+    }
+
+    function saveToHistory() {
+        historyStack.push(JSON.parse(JSON.stringify(currentState)));
+        if (historyStack.length > MAX_HISTORY) historyStack.shift();
+        updateUndoButton();
     }
 
     function undoAction() {
@@ -273,9 +540,7 @@
             currentState = historyStack.pop();
             persistState();
             
-            SLOTS.forEach(slotId => {
-                updateSlotDOM(slotId, currentState[slotId], true);
-            });
+            SLOTS.forEach(slotId => updateSlotDOM(slotId, currentState[slotId], true));
             
             const memoEl = document.getElementById('scenario-memo');
             memoEl.value = currentState.memo || '';
@@ -298,208 +563,43 @@
         }
     }
 
-    document.addEventListener('keydown', function(event) {
-        if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
-            event.preventDefault();
-            undoAction();
-        }
-    });
-
-    // --- DOM 업데이트 및 로직 ---
-
-    const styles = {
-        contextJourney: "bg-amber-50 border-amber-300 text-amber-900 shadow-amber-100/50 hover:bg-amber-100",
-        contextConstraints: "bg-orange-50 border-orange-300 text-orange-900 shadow-orange-100/50 hover:bg-orange-100",
-        contextUnexpected: "bg-red-50 border-red-300 text-red-900 shadow-red-100/50 hover:bg-red-100",
-        howModality: "bg-sky-50 border-sky-300 text-sky-900 shadow-sky-100/50 hover:bg-sky-100",
-        howPersona: "bg-rose-50 border-rose-300 text-rose-900 shadow-rose-100/50 hover:bg-rose-100",
-        whatRobot: "bg-emerald-50 border-emerald-300 text-emerald-900 shadow-emerald-100/50 hover:bg-emerald-100",
-        whatHuman: "bg-violet-50 border-violet-300 text-violet-900 shadow-violet-100/50 hover:bg-violet-100"
-    };
-
-    const cardData = {
-        contextJourney: [
-            { icon: "⏳", text: "밖에서 탑승을 대기할 때" },
-            { icon: "🚪", text: "만원 엘리베이터 문이 막 열렸을 때" },
-            { icon: "🏃", text: "문이 닫히기 직전 아슬아슬할 때" },
-            { icon: "↕️", text: "이동하며 사람들이 층마다 타고 내릴 때" },
-            { icon: "🏁", text: "목적지에 도착해 하차해야 할 때" }
-        ],
-        contextConstraints: [
-            { icon: "👨‍👩‍👧‍👦", text: "사람들에게 겹겹이 포위되었을 때" },
-            { icon: "🛒", text: "유모차/큰 짐이 있어 공간이 부족할 때" },
-            { icon: "📱", text: "모두가 스마트폰에 몰입해 못 볼 때" },
-            { icon: "😶", text: "아주 어색하고 숨 막히는 침묵이 흐를 때" },
-            { icon: "🪞", text: "거울을 통해 사람들과 시선이 마주쳤을 때" }
-        ],
-        contextUnexpected: [
-            { icon: "⚠️", text: "사각지대에 있어 문에 끼일 뻔했을 때" },
-            { icon: "🦶", text: "누군가 실수로 로봇을 발로 툭 찼을 때" },
-            { icon: "🐕", text: "호기심 많은 어린아이나 동물이 접근할 때" },
-            { icon: "🍲", text: "배달 지연으로 음식 냄새가 퍼져나갈 때" },
-            { icon: "🤖", text: "다른 층 배달 로봇과 마주쳤을 때" },
-            { icon: "⚡", text: "갑자기 엘리베이터가 멈추거나 정전됐을 때" }
-        ],
-        howModality: [
-            { icon: "📺", text: "디스플레이 화면으로", tag: "시각" },
-            { icon: "💡", text: "조명(빛, 색상)으로", tag: "시각" },
-            { icon: "🗣️", text: "목소리로 (안내방송)", tag: "청각" },
-            { icon: "🎵", text: "효과음이나 배경음악으로", tag: "청각" },
-            { icon: "🔇", text: "완전한 침묵(음소거)으로", tag: "청각" },
-            { icon: "☁️", text: "부드러운 촉감으로", tag: "물리/촉각" },
-            { icon: "📳", text: "미세한 진동으로", tag: "물리/촉각" },
-            { icon: "🍃", text: "바람이나 향기로", tag: "물리/촉각" },
-            { icon: "💨", text: "날렵하고 빠르게", tag: "움직임/형태" },
-            { icon: "🐢", text: "느리고 조심스럽게", tag: "움직임/형태" },
-            { icon: "🎈", text: "부피를 부풀리거나 쪼그라뜨리며", tag: "움직임/형태" },
-            { icon: "💥", text: "갑자기 툭 튀어나오듯", tag: "타이밍" },
-            { icon: "🌫️", text: "서서히 스며들듯이", tag: "타이밍" },
-            { icon: "🍬", text: "작은 간식이나 달콤한 맛으로", tag: "미각" }
-        ],
-        howPersona: [
-            { icon: "💦", text: "간절하고 애처롭게 (진땀 빼며)" },
-            { icon: "🤵", text: "정중하고 깍듯하게 (호텔리어처럼)" },
-            { icon: "🛑", text: "단호하고 명확하게 (교통경찰처럼)" },
-            { icon: "🥰", text: "친근하고 넉살 좋게 (애교 부리며)" },
-            { icon: "🕵️", text: "은밀하고 조용하게 (비밀요원처럼)" },
-            { icon: "😮‍💨", text: "찌들고 피곤하게 (직장인처럼)" },
-            { icon: "📏", text: "완벽주의자처럼 과하게 원칙을 따지며" }
-        ],
-        whatRobot: [
-            { icon: "↔️", text: "사람과 간격 벌리기 (밀어내기)" },
-            { icon: "↘️", text: "구석으로 밀착하기" },
-            { icon: "🚦", text: "길 비켜달라고 지휘하기 (교통정리)" },
-            { icon: "🤝", text: "자리 양보 협상하기" },
-            { icon: "🙏", text: "스스로 못할 때 도와달라고 조르기" },
-            { icon: "🎁", text: "감사나 보상(쿠폰, 칭찬) 제공하기" },
-            { icon: "🤹", text: "어색함 타파를 위한 개인기 보여주기" },
-            { icon: "🫂", text: "지친 사람 위로하기" },
-            { icon: "🙈", text: "존재감 지우기 (자는 척, 고장 난 척)" },
-            { icon: "🛡️", text: "음식물(온도/냄새) 필사적으로 사수하기" },
-            { icon: "🎛️", text: "문 열림 유지/층수 조작하기 (환경 통제)" },
-            { icon: "👯", text: "사람의 행동 따라 하기 (인간 모방)" }
-        ],
-        whatHuman: [
-            { icon: "✋", text: "쓰다듬어주기" },
-            { icon: "🛣️", text: "길 터주기" },
-            { icon: "📢", text: "내릴 수 있게 대신 소리쳐주기" },
-            { icon: "👆", text: "버튼 대신 눌러주기" },
-            { icon: "🙄", text: "완전 무시하기" },
-            { icon: "😠", text: "좁다고 불평/짜증 내기" },
-            { icon: "🚧", text: "로봇 앞을 고의로 막기" },
-            { icon: "📸", text: "신기해하며 사진 촬영하기" },
-            { icon: "😈", text: "장난치거나 음식 탈취를 시도하기" },
-            { icon: "☕", text: "로봇 위에 자기 짐이나 커피 올려두기" }
-        ]
-    };
-
-    function createCardHTML(item, styleClass, categoryLabel, slotId) {
-        const tagHTML = item.tag 
-            ? `<span class="absolute right-1.5 top-[3px] text-[9px] font-bold px-1.5 py-0.5 rounded bg-white/70 shadow-sm border border-black/5 text-inherit">${item.tag}</span>` 
-            : '';
-        
-        const itemStr = JSON.stringify(item).replace(/"/g, '&quot;');
-
-        return `
-            <div onclick="handleCardClick('${slotId}', ${itemStr}, '${styleClass}', '${categoryLabel}')" class="relative card rounded-2xl border-2 pt-7 pb-3 px-3 flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden ${styleClass} hover:ring-2 hover:ring-indigo-400 hover:ring-offset-2">
-                <div class="absolute top-0 left-0 w-full h-6 bg-black/5 border-b border-black/5 flex justify-center items-center px-2">
-                    <span class="text-[10px] font-bold opacity-80 tracking-tight">${categoryLabel}</span>
-                    ${tagHTML}
-                </div>
-                <div class="text-4xl mb-3 mt-1">${item.icon}</div>
-                <span class="font-bold text-sm md:text-base leading-snug break-keep">${item.text}</span>
-            </div>
-        `;
-    }
-
-    function renderDecks() {
-        const containerContextJourney = document.getElementById('deck-context-journey');
-        const containerContextConstraints = document.getElementById('deck-context-constraints');
-        const containerContextUnexpected = document.getElementById('deck-context-unexpected');
-        
-        const containerHowModality = document.getElementById('deck-how-modality');
-        const containerHowPersona = document.getElementById('deck-how-persona');
-        
-        const containerWhatRobot = document.getElementById('deck-what-robot');
-        const containerWhatHuman = document.getElementById('deck-what-human');
-
-        cardData.contextJourney.forEach(item => {
-            containerContextJourney.innerHTML += createCardHTML(item, styles.contextJourney, "[상황] 시간적 흐름", "slot-context");
-        });
-        cardData.contextConstraints.forEach(item => {
-            containerContextConstraints.innerHTML += createCardHTML(item, styles.contextConstraints, "[상황] 공간/소통 제약", "slot-context");
-        });
-        cardData.contextUnexpected.forEach(item => {
-            containerContextUnexpected.innerHTML += createCardHTML(item, styles.contextUnexpected, "[상황] 돌발 변수", "slot-context");
-        });
-
-        cardData.howModality.forEach(item => {
-            containerHowModality.innerHTML += createCardHTML(item, styles.howModality, "[어떻게] 표현 수단", "slot-how-modality");
-        });
-        cardData.howPersona.forEach(item => {
-            containerHowPersona.innerHTML += createCardHTML(item, styles.howPersona, "[어떻게] 태도/감정", "slot-how-persona");
-        });
-        
-        cardData.whatRobot.forEach(item => {
-            containerWhatRobot.innerHTML += createCardHTML(item, styles.whatRobot, "[무엇을] 로봇 행동", "slot-robot");
-        });
-        cardData.whatHuman.forEach(item => {
-            containerWhatHuman.innerHTML += createCardHTML(item, styles.whatHuman, "[무엇을] 사람 행동", "slot-human");
-        });
-    }
-
-    function handleCardClick(slotId, item, styleClass, categoryLabel) {
+    function clearAllSlots() {
         saveToHistory();
-        
-        currentState[slotId] = { item, styleClass, categoryLabel };
+        currentState = {
+            'slot-context': null, 'slot-how-modality': null, 'slot-how-persona': null,
+            'slot-robot': null, 'slot-human': null, 'memo': ''
+        };
         persistState();
-        
-        updateSlotDOM(slotId, currentState[slotId], false);
+        SLOTS.forEach(slotId => updateSlotDOM(slotId, null, false));
+        const memoEl = document.getElementById('scenario-memo');
+        memoEl.value = '';
+        autoResizeMemo(memoEl);
     }
 
-    function updateSlotDOM(slotId, data, skipAnimation = false) {
-        const slot = document.getElementById(slotId);
-        
-        if (!data) {
-            let placeholderText = "";
-            if(slotId === 'slot-context') placeholderText = "상황";
-            if(slotId === 'slot-how-modality') placeholderText = "표현 수단";
-            if(slotId === 'slot-how-persona') placeholderText = "태도/감정";
-            if(slotId === 'slot-robot') placeholderText = "무엇을 (로봇)";
-            if(slotId === 'slot-human') placeholderText = "무엇을 (사람)";
-            
-            slot.className = `aspect-square rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 font-medium bg-white transition-all`;
-            slot.innerHTML = `
-                <span class="text-xl md:text-3xl mb-1 md:mb-2">❓</span>
-                <span class="text-[8px] md:text-sm whitespace-nowrap">${placeholderText}</span>
-            `;
-            return;
-        }
+    function drawRandomCards() {
+        saveToHistory();
+        const getRandomItem = arr => arr[Math.floor(Math.random() * arr.length)];
 
-        const { item, styleClass, categoryLabel } = data;
+        const allContexts = [
+            ...getCombinedCardData('contextJourney').map(item => ({ item, styleClass: styles.contextJourney, categoryLabel: "[상황] 시간적 흐름" })),
+            ...getCombinedCardData('contextConstraints').map(item => ({ item, styleClass: styles.contextConstraints, categoryLabel: "[상황] 공간/소통 제약" })),
+            ...getCombinedCardData('contextUnexpected').map(item => ({ item, styleClass: styles.contextUnexpected, categoryLabel: "[상황] 돌발 변수" }))
+        ];
         
-        const tagHTML = item.tag 
-            ? `<span class="absolute right-0.5 top-[1px] md:right-1 md:top-1 text-[5px] md:text-[8px] font-bold px-0.5 md:px-1 py-0.5 rounded bg-white/70 shadow-sm border border-black/5 text-inherit truncate max-w-[40%]">${item.tag}</span>` 
-            : '';
+        currentState['slot-context'] = getRandomItem(allContexts);
+        
+        currentState['slot-how-modality'] = {
+            item: getRandomItem(getCombinedCardData('howModality')), styleClass: styles.howModality, categoryLabel: "[어떻게] 표현 수단 (로봇)"
+        };
+        currentState['slot-how-persona'] = {
+            item: getRandomItem(getCombinedCardData('howPersona')), styleClass: styles.howPersona, categoryLabel: "[어떻게] 태도/감정 (로봇)"
+        };
 
-        const animationClasses = skipAnimation ? '' : 'scale-[1.02] shadow-md';
+        currentState['slot-robot'] = { item: getRandomItem(getCombinedCardData('whatRobot')), styleClass: styles.whatRobot, categoryLabel: "[무엇을] 로봇 행동" };
+        currentState['slot-human'] = { item: getRandomItem(getCombinedCardData('whatHuman')), styleClass: styles.whatHuman, categoryLabel: "[무엇을] 사람 행동" };
 
-        slot.className = `relative aspect-square rounded-xl border-2 px-0.5 md:px-1 flex flex-col items-center justify-center text-center overflow-hidden transition-all duration-300 ${styleClass} ${animationClasses}`;
-        
-        slot.innerHTML = `
-             <div class="absolute top-0 left-0 w-full h-3.5 md:h-6 bg-black/5 border-b border-black/5 flex justify-center items-center px-0.5 md:px-1">
-                <span class="text-[6px] md:text-[10px] font-bold opacity-80 tracking-tight truncate w-full text-center">${categoryLabel}</span>
-                ${tagHTML}
-            </div>
-            <div class="text-xl md:text-3xl mt-3 md:mt-5 mb-0.5 md:mb-2">${item.icon}</div>
-            <span class="font-bold text-[8px] md:text-[12px] leading-tight break-keep px-0.5 w-full text-center">${item.text}</span>
-        `;
-        
-        if (!skipAnimation) {
-            setTimeout(() => {
-                slot.classList.remove('scale-[1.02]', 'shadow-md');
-            }, 300);
-        }
+        persistState();
+        SLOTS.forEach(slotId => updateSlotDOM(slotId, currentState[slotId], false));
     }
 
     function handleMemoChange(e) {
@@ -507,69 +607,10 @@
         persistState();
         autoResizeMemo(e.target);
     }
-    
+
     function autoResizeMemo(element) {
         element.style.height = 'auto';
         element.style.height = (element.scrollHeight) + 'px';
-    }
-
-    function clearAllSlots() {
-        saveToHistory();
-        
-        currentState = {
-            'slot-context': null,
-            'slot-how-modality': null,
-            'slot-how-persona': null,
-            'slot-robot': null,
-            'slot-human': null,
-            'memo': ''
-        };
-        persistState();
-        
-        SLOTS.forEach(slotId => {
-            updateSlotDOM(slotId, null, false);
-        });
-        
-        const memoEl = document.getElementById('scenario-memo');
-        memoEl.value = '';
-        autoResizeMemo(memoEl);
-    }
-
-    function getRandomItem(arr) {
-        return arr[Math.floor(Math.random() * arr.length)];
-    }
-
-    function drawRandomCards() {
-        saveToHistory();
-
-        const allContexts = [
-            ...cardData.contextJourney.map(item => ({ item, styleClass: styles.contextJourney, categoryLabel: "[상황] 시간적 흐름" })),
-            ...cardData.contextConstraints.map(item => ({ item, styleClass: styles.contextConstraints, categoryLabel: "[상황] 공간/소통 제약" })),
-            ...cardData.contextUnexpected.map(item => ({ item, styleClass: styles.contextUnexpected, categoryLabel: "[상황] 돌발 변수" }))
-        ];
-        
-        currentState['slot-context'] = getRandomItem(allContexts);
-        
-        // 표현 수단과 태도/감정을 각각 뽑음
-        currentState['slot-how-modality'] = {
-            item: getRandomItem(cardData.howModality),
-            styleClass: styles.howModality,
-            categoryLabel: "[어떻게] 표현 수단"
-        };
-        currentState['slot-how-persona'] = {
-            item: getRandomItem(cardData.howPersona),
-            styleClass: styles.howPersona,
-            categoryLabel: "[어떻게] 태도/감정"
-        };
-
-        currentState['slot-robot'] = { item: getRandomItem(cardData.whatRobot), styleClass: styles.whatRobot, categoryLabel: "[무엇을] 로봇 행동" };
-        currentState['slot-human'] = { item: getRandomItem(cardData.whatHuman), styleClass: styles.whatHuman, categoryLabel: "[무엇을] 사람 행동" };
-
-        persistState();
-
-        SLOTS.forEach(slotId => {
-            updateSlotDOM(slotId, currentState[slotId], false);
-        });
     }
 
     function downloadScenarioImage() {
@@ -582,23 +623,149 @@
                 if (cleanName) nameParts.push(cleanName);
             }
         });
-        
         const fileName = nameParts.length > 0 ? nameParts.join('-') + '.png' : 'ideation_scenario.png';
         
-        html2canvas(captureArea, {
-            scale: 2, 
-            backgroundColor: "#f8fafc"
-        }).then(canvas => {
-            const image = canvas.toDataURL("image/png", 1.0);
-            const link = document.createElement('a');
-            link.download = fileName;
-            link.href = image;
-            link.click();
-        });
+        const memoTextarea = document.getElementById('scenario-memo');
+        const tempDiv = document.createElement('div');
+        const computedStyle = window.getComputedStyle(memoTextarea);
+        
+        tempDiv.className = memoTextarea.className;
+        tempDiv.style.cssText = computedStyle.cssText;
+        tempDiv.style.height = 'auto';
+        tempDiv.style.minHeight = memoTextarea.offsetHeight + 'px';
+        tempDiv.style.whiteSpace = 'pre-wrap';
+        tempDiv.style.wordBreak = 'keep-all';
+        tempDiv.style.display = 'block';
+        
+        if (memoTextarea.value.trim()) {
+            tempDiv.innerText = memoTextarea.value;
+            tempDiv.style.color = '#1e293b'; 
+        } else {
+            tempDiv.innerText = memoTextarea.placeholder;
+            tempDiv.style.color = '#94a3b8';
+        }
+        
+        memoTextarea.parentNode.insertBefore(tempDiv, memoTextarea);
+        memoTextarea.style.display = 'none';
+
+        const filterFn = (node) => {
+            if (node.tagName && node.hasAttribute('data-ignore') && node.getAttribute('data-ignore') === 'true') {
+                return false; 
+            }
+            return true;
+        };
+
+        setTimeout(() => {
+            htmlToImage.toPng(captureArea, { 
+                pixelRatio: 2, 
+                backgroundColor: '#f8fafc',
+                filter: filterFn,
+                style: {
+                    transform: 'scale(1)',
+                    transformOrigin: 'top left'
+                }
+            })
+            .then(function (dataUrl) {
+                tempDiv.remove();
+                memoTextarea.style.display = '';
+
+                const link = document.createElement('a');
+                link.download = fileName;
+                link.href = dataUrl;
+                link.click();
+            })
+            .catch(function (error) {
+                console.error("이미지 캡처 에러:", error);
+                tempDiv.remove();
+                memoTextarea.style.display = '';
+                alert("이미지 캡처 중 오류가 발생했습니다.");
+            });
+        }, 50);
     }
 
+    function openAddCardModal(key, styleClass, label, slotId) {
+        document.getElementById('modal-category-key').value = key;
+        document.getElementById('modal-style-class').value = styleClass;
+        document.getElementById('modal-category-label').value = label;
+        document.getElementById('modal-slot-id').value = slotId;
+        
+        document.getElementById('modal-input-icon').value = '✨';
+        document.getElementById('modal-input-text').value = '';
+        document.getElementById('modal-input-tag').value = '';
+        
+        if(key === 'howModality') {
+            document.getElementById('modal-tag-container').classList.remove('hidden');
+        } else {
+            document.getElementById('modal-tag-container').classList.add('hidden');
+        }
+        
+        const modal = document.getElementById('add-card-modal');
+        const modalContent = document.getElementById('modal-content');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.classList.add('modal-open');
+        
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            modalContent.classList.remove('scale-95');
+            modalContent.classList.add('scale-100');
+            document.getElementById('modal-input-text').focus();
+        }, 10);
+    }
+
+    function closeAddCardModal() {
+        const modal = document.getElementById('add-card-modal');
+        const modalContent = document.getElementById('modal-content');
+        
+        modal.classList.add('opacity-0');
+        modalContent.classList.remove('scale-100');
+        modalContent.classList.add('scale-95');
+        document.body.classList.remove('modal-open');
+        
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }, 300);
+    }
+
+    function submitNewCard() {
+        const key = document.getElementById('modal-category-key').value;
+        const icon = document.getElementById('modal-input-icon').value || '✨';
+        const text = document.getElementById('modal-input-text').value.trim();
+        const tag = document.getElementById('modal-input-tag').value.trim();
+        
+        if(!text) {
+            alert('카드의 내용을 입력해주세요.');
+            document.getElementById('modal-input-text').focus();
+            return;
+        }
+        
+        const newItem = { icon, text };
+        if(key === 'howModality' && tag) newItem.tag = tag;
+        
+        customCardData[key].push(newItem);
+        persistCustomCards();
+        
+        renderDecks(); 
+        closeAddCardModal();
+    }
+
+    function deleteCustomCard(key, index) {
+        if(confirm('직접 추가한 이 카드를 삭제하시겠습니까?')) {
+            customCardData[key].splice(index, 1);
+            persistCustomCards();
+            renderDecks();
+        }
+    }
+
+    document.addEventListener('keydown', function(event) {
+        if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
+            event.preventDefault();
+            undoAction();
+        }
+    });
+
     window.onload = () => {
-        renderDecks();
         loadPersistedState();
     };
 
